@@ -85,13 +85,13 @@ Dubbo的源码中AdaptiveExtensionFactory和AdaptiveCompiler是用@Adaptive注�
 
 类图如下：
 
-![](..\images\ExtensionFactory.png)
+![](../images/ExtensionFactory.png)
 
 **2. AdaptiveCompiler**
 
 类图如下：
 
-![](..\images\Compiler.png)
+![](../images/Compiler.png)
 
 从上面的类图可以看到，SPI的自适应扩展和SPI的扩展一样也实现了SPI接口。也就是说用@Adaptive注解的SPI实现类是一种特殊的SPI扩展。既然是也属于SPI接口的实现，那么类的加载也就需要符号Dubbo SPI机制的路径规定，同样的需要像普通的SPI扩展一样进行配置。以AdaptiveExtensionFactory的配置为例，配置如下：
 
@@ -107,11 +107,11 @@ spi=org.apache.dubbo.common.extension.factory.SpiExtensionFactory
 
 **3. AdaptiveExtensionFactory执行原理**
 
-![](..\images\AdaptiveExtensionFactory执行原理.png)
+![](../images/AdaptiveExtensionFactory执行原理.png)
 
 **4. AdaptiveCompiler执行原理**
 
-![](..\images\AdaptiveCompiler执行原理.png)
+![](../images/AdaptiveCompiler执行原理.png)
 
 如果说AdaptiveExtensionFactory的执行看不出来根据条件选择SPI实现，那么从AdaptiveCompiler的执行上就可以看到根据条件选择不同的实现的功能，也就是说自适应功能。
 
@@ -380,7 +380,7 @@ public class MyProtocol$Adaptive implements org.mini.dubbo.common.MyProtocol {
 
 整个扩展选择的流程如下：
 
-![](E:\document\images\条件过滤.png)
+![](../images/条件过滤.png)
 
 Dubbo通过@Activate注解来指定扩展的分组、键关联和顺序信息。
 
