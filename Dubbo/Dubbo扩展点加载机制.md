@@ -953,7 +953,7 @@ private boolean isWrapperClass(Class<?> clazz) {
 
 执行流程如下：
 
-
+![](..\images\getActionExtension执行顺序.png)
 
 
 
