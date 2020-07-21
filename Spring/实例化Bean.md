@@ -140,7 +140,66 @@ public class DeserializationExample
 
 # 二、Spring实例化Bean
 
-创建对象的方式上面描述了，使用Spring，对象的创建交给了Spring容器，对于主动创建对象来说，这种方式就是一种非主动的方式，通过书写相关的配置后，Spring会根据用户的bean配置信息来创建对象，这是一种间接创建对象的方式。并且，Spring还提供了几种用于实例化bean的方式。只要按照Spring定义的方法规则书写即可。
+使用Spring框架，对象的创建由容器负责。但是，真正得创造出对象还是上面提到的几种方式。只不过Spring在此基础上提供了一层包装，形成了自己实例化bean的方式。
+
+## 2.1. 通过构造方法实例化
+
+~~~xml
+<bean id="exampleBean" class="examples.ExampleBean" />
+~~~
+
+在Spring配置文件中书写，容器启动之后，就可以通过id或者类字面量获取bean对象。
+
+> 本质：通过反射来创建对象。
+
+## 2.2. 通过静态工厂方法实例化
+
+~~~java
+public class ClientService {
+    private static ClientService clientService = new ClientService();
+    private ClientService() {}
+
+    public static ClientService createInstance() {
+        return clientService;
+    }
+}
+~~~
+
+~~~xml
+<bean id="clientService" class="examples.ClientService" factory-method="createInstance"/>
+~~~
+
+规则：class属性指定包含用于创建对象的静态方法，factory-method属性指定该静态方法。
+
+> 本质：通过new关键词创建对象
+
+## 2.3. 通过实例工厂方法实例化
+
+~~~java
+public class DefaultServiceLocator {
+
+    private static ClientService clientService = new ClientServiceImpl();
+
+    public ClientService createClientServiceInstance() {
+        return clientService;
+    }
+    
+}
+~~~
+
+~~~xml
+<bean id="serviceLocator" class="examples.DefaultServiceLocator"/>
+
+<bean id="clientService" factory-bean="serviceLocator" factory-method="createClientServiceInstance"/>
+~~~
+
+> 本质：通过new关键字创建对象
+
+在Spring文档中，"factory bean"指的是配置在容器中通过调用实例或静态工厂方法来创建对象的bean。
+
+> 个人觉得：对比实例工厂方法实例化和使用"factory bean"，可以发现"factory bean"是对实例工厂方法实例化方式进行了简化。实例化工厂方法实例化方式中factory-bean属性要显示指定用于创建目标对象的bean，factory-method属性要显示指定用于创建目标对象的方法。而使用了"factory-bean"，实现了FactoryBean，表明它是一个工厂bean，等同于实例化工厂方法实例化方式的factory-bean属性；"factory-bean"默认通过getObject()来获取对象，它等同于factory-method。
+
+
 
 
 

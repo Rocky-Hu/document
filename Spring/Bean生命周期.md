@@ -1,4 +1,0 @@
-使用Spring框架， bean对象的创建和销毁交于Spring容器管理。Spring管理着bean对象的出生和死亡，在bean对象的整个生命周期内，Spring会负责加工bean对象。本章详细讨论在bean对象的整个生命周期内，Spring会怎样对bean对象进行炖造。
-
-
-

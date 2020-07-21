@@ -215,11 +215,111 @@ public class ActiveProfilesPostProcessor implements BeanPostProcessor {
 
 # 三、Aware接口执行原理
 
-在上面的Aware接口使用的示例中，需要感知Spring容器的用户bean实现了Aware的子接口，子接口都有个特点就是都提供了setter方法，这个是给Bean设值常用的方法。给bean设置属性的方式有构造方法传递和setter方法传递的方式，setter方式的设置时机是在bean对象创造出来之后再调用setter方法进行设置。对于Spring容器来说，处理流程也是一样的，在实例化bean之后，会有个时机再调用bean的setter方法将需要的信息设置进来。
+Spring代码中对于Aware接口的执行有两种方式：
 
+- 初始化Bean的时候直接进行方法调用 -> setXXXX
+- BeanPostProcessor -> Object postProcessBeforeInitialization(Object bean, String beanName)
 
+## 3.1. 直接方法调用
 
+初始化bean的入口为：org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#initializeBean(java.lang.String, java.lang.Object, org.springframework.beans.factory.support.RootBeanDefinition)
 
+方法如下：
+
+~~~java
+protected Object initializeBean(final String beanName, final Object bean, @Nullable RootBeanDefinition mbd) {
+		if (System.getSecurityManager() != null) {
+			AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+				invokeAwareMethods(beanName, bean);
+				return null;
+			}, getAccessControlContext());
+		}
+		else {
+			invokeAwareMethods(beanName, bean);
+		}
+
+		Object wrappedBean = bean;
+		if (mbd == null || !mbd.isSynthetic()) {
+			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+		}
+
+		try {
+			invokeInitMethods(beanName, wrappedBean, mbd);
+		}
+		catch (Throwable ex) {
+			throw new BeanCreationException(
+					(mbd != null ? mbd.getResourceDescription() : null),
+					beanName, "Invocation of init method failed", ex);
+		}
+		if (mbd == null || !mbd.isSynthetic()) {
+			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+		}
+
+		return wrappedBean;
+	}
+~~~
+
+invokeAwareMethods就是直接调用Aware接口方法的入口。
+
+~~~java
+private void invokeAwareMethods(final String beanName, final Object bean) {
+		if (bean instanceof Aware) {
+			if (bean instanceof BeanNameAware) {
+				((BeanNameAware) bean).setBeanName(beanName);
+			}
+			if (bean instanceof BeanClassLoaderAware) {
+				ClassLoader bcl = getBeanClassLoader();
+				if (bcl != null) {
+					((BeanClassLoaderAware) bean).setBeanClassLoader(bcl);
+				}
+			}
+			if (bean instanceof BeanFactoryAware) {
+				((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.this);
+			}
+		}
+	}
+~~~
+
+它处理的三种具体的Aware类型：BeanNameAware、BeanClassLoaderAware和BeanFactoryAware。
+
+## 3.2. BeanPostProcessor处理Aware接口
+
+上面initializeBean方法有这样的一行：
+
+~~~java
+Object wrappedBean = bean;
+if (mbd == null || !mbd.isSynthetic()) {
+	wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+}
+
+~~~
+
+BeanPostProcessor进行初始化前处理。
+
+ApplicationContextAwareProcessor就是用来处理非直接方法调用的Aware接口实现。
+
+~~~java
+private void invokeAwareInterfaces(Object bean) {
+		if (bean instanceof EnvironmentAware) {
+			((EnvironmentAware) bean).setEnvironment(this.applicationContext.getEnvironment());
+		}
+		if (bean instanceof EmbeddedValueResolverAware) {
+			((EmbeddedValueResolverAware) bean).setEmbeddedValueResolver(this.embeddedValueResolver);
+		}
+		if (bean instanceof ResourceLoaderAware) {
+			((ResourceLoaderAware) bean).setResourceLoader(this.applicationContext);
+		}
+		if (bean instanceof ApplicationEventPublisherAware) {
+			((ApplicationEventPublisherAware) bean).setApplicationEventPublisher(this.applicationContext);
+		}
+		if (bean instanceof MessageSourceAware) {
+			((MessageSourceAware) bean).setMessageSource(this.applicationContext);
+		}
+		if (bean instanceof ApplicationContextAware) {
+			((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
+		}
+	}
+~~~
 
 
 
