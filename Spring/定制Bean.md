@@ -315,11 +315,154 @@ LifecycleProcessor默认的实现为org.springframework.context.support.DefaultL
 
 startBeans启动原理：获取所有实现了Lifecycle的bean，然后调用start方法。
 
-> 这里会根据启动顺序做处理。
+~~~java
+private void startBeans(boolean autoStartupOnly) {
+		Map<String, Lifecycle> lifecycleBeans = getLifecycleBeans();
+		Map<Integer, LifecycleGroup> phases = new HashMap<>();
+		lifecycleBeans.forEach((beanName, bean) -> {
+			if (!autoStartupOnly || (bean instanceof SmartLifecycle && ((SmartLifecycle) bean).isAutoStartup())) {
+				int phase = getPhase(bean);
+				LifecycleGroup group = phases.get(phase);
+				if (group == null) {
+					group = new LifecycleGroup(phase, this.timeoutPerShutdownPhase, lifecycleBeans, autoStartupOnly);
+					phases.put(phase, group);
+				}
+				group.add(beanName, bean);
+			}
+		});
+		if (!phases.isEmpty()) {
+			List<Integer> keys = new ArrayList<>(phases.keySet());
+			Collections.sort(keys);
+			for (Integer key : keys) {
+				phases.get(key).start();
+			}
+		}
+	}
+~~~
 
 ### 1.5.3. SmartLifecyle接口
 
+Lifecycle接口没有自动启动的语义，同时如果想细粒度的控制一个自动启动的bean（包括启动顺序）可以实现SmartLifecycle（聪明的Lifecycle）接口。
 
+API描述：
+
+>An extension of the link Lifecycle} interface for those objects that require to be started upon ApplicationContext refresh and/or shutdown in a particular order.
+
+接口定义：
+
+~~~java
+public interface SmartLifecycle extends Lifecycle, Phased {
+
+	/**
+	 * The default phase for {@code SmartLifecycle}: {@code Integer.MAX_VALUE}.
+	 * <p>This is different from the common phase {@code 0} associated with regular
+	 * {@link Lifecycle} implementations, putting the typically auto-started
+	 * {@code SmartLifecycle} beans into a later startup phase and an earlier
+	 * shutdown phase.
+	 * @since 5.1
+	 * @see #getPhase()
+	 * @see org.springframework.context.support.DefaultLifecycleProcessor#getPhase(Lifecycle)
+	 */
+	int DEFAULT_PHASE = Integer.MAX_VALUE;
+
+
+	/**
+	 * Returns {@code true} if this {@code Lifecycle} component should get
+	 * started automatically by the container at the time that the containing
+	 * {@link ApplicationContext} gets refreshed.
+	 * <p>A value of {@code false} indicates that the component is intended to
+	 * be started through an explicit {@link #start()} call instead, analogous
+	 * to a plain {@link Lifecycle} implementation.
+	 * <p>The default implementation returns {@code true}.
+	 * @see #start()
+	 * @see #getPhase()
+	 * @see LifecycleProcessor#onRefresh()
+	 * @see ConfigurableApplicationContext#refresh()
+	 */
+	default boolean isAutoStartup() {
+		return true;
+	}
+
+	/**
+	 * Indicates that a Lifecycle component must stop if it is currently running.
+	 * <p>The provided callback is used by the {@link LifecycleProcessor} to support
+	 * an ordered, and potentially concurrent, shutdown of all components having a
+	 * common shutdown order value. The callback <b>must</b> be executed after
+	 * the {@code SmartLifecycle} component does indeed stop.
+	 * <p>The {@link LifecycleProcessor} will call <i>only</i> this variant of the
+	 * {@code stop} method; i.e. {@link Lifecycle#stop()} will not be called for
+	 * {@code SmartLifecycle} implementations unless explicitly delegated to within
+	 * the implementation of this method.
+	 * <p>The default implementation delegates to {@link #stop()} and immediately
+	 * triggers the given callback in the calling thread. Note that there is no
+	 * synchronization between the two, so custom implementations may at least
+	 * want to put the same steps within their common lifecycle monitor (if any).
+	 * @see #stop()
+	 * @see #getPhase()
+	 */
+	default void stop(Runnable callback) {
+		stop();
+		callback.run();
+	}
+
+	/**
+	 * Return the phase that this lifecycle object is supposed to run in.
+	 * <p>The default implementation returns {@link #DEFAULT_PHASE} in order to
+	 * let {@code stop()} callbacks execute after regular {@code Lifecycle}
+	 * implementations.
+	 * @see #isAutoStartup()
+	 * @see #start()
+	 * @see #stop(Runnable)
+	 * @see org.springframework.context.support.DefaultLifecycleProcessor#getPhase(Lifecycle)
+	 */
+	@Override
+	default int getPhase() {
+		return DEFAULT_PHASE;
+	}
+
+}
+~~~
+
+**启动顺序保证**
+
+实现SmartLifecycle接口的组件有依赖关系，依赖关系影响到启动顺序，同时SmartLifecycle实现了Phased接口，返回的phase值也影响到启动顺序。
+
+注意，任何明确的"depends-on"关系优先于phase order，也就是说被依赖bean优先于依赖bean启动，落后于依赖bean停止。
+
+对于phase order的规则如下：
+
+- 较小phase order的组件先启动；
+- 相同phase order的组件启动顺序是随意的；
+- 未实现SmartLicycle接口的组件的phase order默认为0。
+
+**自动启动保证**
+
+SmartLifecycle接口定义了关系到是否自动启动的方法：
+
+~~~java
+default boolean isAutoStartup() {
+	return true;
+}
+~~~
+
+- 返回true，表示组件会在ApplicationContext刷新的时候启动；
+- 返回false，表示组件通过明确地调用start()方法启动，等同于直接实现Lifecycle接口。
+
+### 1.5.4. 自动启动流程
+
+~~~text
+ApplicationContext实例化（调用构造方法）
+->
+refresh()
+->
+finishRefresh()
+->
+initLifecycleProcessor()
+->
+getLifecycleProcessor().onRefresh();
+->
+org.springframework.context.support.DefaultLifecycleProcessor#startBeans
+~~~
 
 # 二、ApplicationContextAware和BeanNameAware
 
