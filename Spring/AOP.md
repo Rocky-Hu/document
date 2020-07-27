@@ -1031,7 +1031,7 @@ DefaultAdvisorAutoProxyCreator是一个更通用和非常强大的自动代理�
 使用这个自动创建其需要：
 
 - 指定一个DefaultAdvisorAutoProxyCreator bean定义
-- 在相同或相关联的上下文中指定一定数量的advisors。注意，这里只能是advisors，而不能是advicers或者interceptors。因为要根据pointcut来选择需要被代理的bean。
+- 在相同或相关联的上下文中指定一定数量的advisors。注意，这里只能是advisors，而不能是advices或者interceptors。因为要根据pointcut来选择需要被代理的bean。
 
 ~~~xml
 <bean
@@ -1046,4 +1046,8 @@ class="org.springframework.transaction.interceptor.TransactionAttributeSourceAdv
 </bean>
 <bean id="businessObject2" class="com.mycompany.BusinessObject2"/>
 ~~~
+
+DefaultAdvisorAutoProxyCreator会自动评估包含在advisor中的pointcut来确定业务对象的哪些方法可以被通知。
+
+## 3.10. 使用TargetSource实现
 
