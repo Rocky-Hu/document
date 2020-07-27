@@ -16,6 +16,8 @@
 
 切面在特定连接点上采取的操作。不同类型的建议包括“around”、“before”和"after"的建议。许多AOP框架，包括Spring，将通知建模为拦截器，并维护围绕连接点的拦截器链。
 
+> Spring解释：action to take at a joinpoint
+
 ## 1.4. 切入点（Pointcut）
 
 匹配连接点的谓词。通知与切入点表达式相关联，并在与切入点匹配的任何连接点上运行(例如，执行具有特定名称的方法)。连接点与切入点表达式匹配的概念是AOP的核心，Spring默认使用AspectJ切入点表达式语言。
@@ -592,9 +594,456 @@ proceed()的返回值就是被调用方法的返回值。proceed()方法可以�
 
 #### 2.2.4.6. Advice参数
 
+##### 2.2.4.6.1. 访问当前的JointPoint
 
+advice方法可能定义参数，第一个参数类型是org.aspectj.lang.JointPoint。JointPoint提供了一些有用的方法：
 
+- getArgs()：返回方法参数；
+- getThis()：返回代理对象；
+- getTarget()：返回目标对象；
+- getSignature()：返回被通知的方法的签名
+- toString()：打印被通知的方法的有作用的描述
 
+##### 2.2.4.6.2. 传递参数给Advice
 
+使用args绑定形式。
 
+~~~java
+@Before("com.xyz.myapp.SystemArchitecture.dataAccessOperation() && args(account,..)")
+public void validateAccount(Account account) {
+  // ...
+}
+~~~
+
+也可以这样：
+
+~~~java
+@Pointcut("com.xyz.myapp.SystemArchitecture.dataAccessOperation() &&args(account,..)")
+private void accountDataAccessOperation(Account account) {}
+
+@Before("accountDataAccessOperation(account)")
+public void validateAccount(Account account) {
+  // ...
+}
+~~~
+
+##### 2.2.4.6.3 Advice排序
+
+当不同切面的advice都想在相同的join point上运行时，除非你指定，不然执行的顺序是不明确地。你可以通过指定优先级来控制顺序。切面类通过实现org.springframework.core.Ordered接口或者用@Order注解来指定优先级。给定两个切面类，Ordered.getValue()返回值小的切面具有高优先级。
+
+当同一个切面的两个advice需要运行在相同的join point，这个顺序是未知的。
+
+### 2.2.5. Introductions
+
+使被通知的对象实现一个新的接口，并提供该接口的实现。这种方法是通过让被通知的对象实现新接口的方式来提供功能的增强。
+
+通过使用 @DeclareParents注解来定义引入增强。
+
+~~~java
+@Aspect
+public class UsageTracking {
+  @DeclareParents(value="com.xzy.myapp.service.*+", defaultImpl=DefaultUsageTracked.class)
+  public static UsageTracked mixin;
+    
+  @Before("com.xyz.myapp.SystemArchitecture.businessService() && this(usageTracked)")
+  public void recordUsage(UsageTracked usageTracked) {
+  	usageTracked.incrementUseCount();
+  }
+    
+}
+~~~
+
+## 2.3. 基于Schema的AOP支持
+
+### 2.3.1. 声明Aspect
+
+~~~xml
+<aop:config>
+  <aop:aspect id="myAspect" ref="aBean">
+  ...
+  </aop:aspect>
+</aop:config>
+
+<bean id="aBean" class="...">
+  ...
+</bean>
+~~~
+
+### 2.3.2. 声明Pointcut
+
+~~~xml
+<aop:config>
+  <aop:pointcut id="businessService" expression="execution(* com.xyz.myapp.service.*.*(..))"/>
+</aop:config>
+~~~
+
+#### 2.3.2.1. 传参
+
+~~~xml
+<aop:config>
+  <aop:aspect id="myAspect" ref="aBean">
+      
+  	<aop:pointcut id="businessService" expression="execution(* com.xyz.myapp.service.*.*(..)) && this(service)"/>
+      
+  	<aop:before pointcut-ref="businessService" method="monitor"/>
+  ...
+  </aop:aspect>
+    
+</aop:config>
+~~~
+
+#### 2.3.2.2. 组合
+
+使用关键字and、or和not。
+
+~~~xml
+<aop:config>
+  <aop:aspect id="myAspect" ref="aBean">
+      
+  	<aop:pointcut id="businessService" expression="execution(* com.xyz.myapp.service.*.*(..)) and
+this(service)"/>
+  	<aop:before pointcut-ref="businessService" method="monitor"/>
+  ...
+  </aop:aspect>
+</aop:config>
+~~~
+
+### 2.3.3. 声明Advice
+
+#### Before Advice
+
+~~~xml
+<aop:aspect id="beforeExample" ref="aBean">
+  <aop:before pointcut-ref="dataAccessOperation" method="doAccessCheck"/>
+  ...
+</aop:aspect>
+~~~
+
+~~~xml
+<aop:aspect id="beforeExample" ref="aBean">
+  <aop:before pointcut="execution(* com.xyz.myapp.dao.*.*(..))" method="doAccessCheck"/>
+  ...
+</aop:aspect>
+~~~
+
+#### After Returning Advice
+
+~~~xml
+<aop:aspect id="afterReturningExample" ref="aBean">
+  <aop:after-returning pointcut-ref="dataAccessOperation" method="doAccessCheck"/>
+  ...
+</aop:aspect>
+~~~
+
+~~~xml
+<aop:aspect id="afterReturningExample" ref="aBean">
+  <aop:after-returning pointcut-ref="dataAccessOperation" returning="retVal" method="doAccessCheck"/>
+  ...
+</aop:aspect>
+~~~
+
+#### After Throwing Advice
+
+~~~xml
+<aop:aspect id="afterThrowingExample" ref="aBean">
+  <aop:after-throwing pointcut-ref="dataAccessOperation" method="doRecoveryActions"/>
+  ...
+</aop:aspect>
+~~~
+
+~~~xml
+<aop:aspect id="afterThrowingExample" ref="aBean">
+  <aop:after-throwing pointcut-ref="dataAccessOperation" throwing="dataAccessEx" method="doRecoveryActions"/>
+  ...
+</aop:aspect>
+~~~
+
+#### After (Finally) Advice
+
+~~~xml
+<aop:aspect id="afterFinallyExample" ref="aBean">
+  <aop:after pointcut-ref="dataAccessOperation" method="doReleaseLock"/>
+  ...
+</aop:aspect>
+~~~
+
+#### Around Advice
+
+~~~xml
+<aop:aspect id="aroundExample" ref="aBean">
+  <aop:around pointcut-ref="businessService" method="doBasicProfiling"/>
+  ...
+</aop:aspect>
+~~~
+
+~~~java
+public Object doBasicProfiling(ProceedingJoinPoint pjp) throws Throwable {
+  // start stopwatch
+  Object retVal = pjp.proceed();
+  // stop stopwatch
+  return retVal;
+}
+~~~
+
+#### Advice Parameters
+
+~~~xml
+<aop:before
+  pointcut="com.xyz.lib.Pointcuts.anyPublicMethod() and @annotation(auditable)"
+  method="audit"
+  arg-names="auditable"/>
+~~~
+
+#### Advice Ordering
+
+实现Ordered接口或使用@Order注解。
+
+### 2.3.4.  Introductions
+
+~~~xml
+<aop:aspect id="usageTrackerAspect" ref="usageTracking">
+  <aop:declare-parents
+  types-matching="com.xzy.myapp.service.*+"
+  implement-interface="com.xyz.myapp.service.tracking.UsageTracked"
+  default-impl="com.xyz.myapp.service.tracking.DefaultUsageTracked"/>
+  <aop:before
+  pointcut="com.xyz.myapp.SystemArchitecture.businessService()
+  and this(usageTracked)"
+  method="recordUsage"/>
+</aop:aspect>
+~~~
+
+### 2.3.5. Advisors
+
+~~~xml
+<aop:config>
+  <aop:pointcut id="businessService"
+  expression="execution(* com.xyz.myapp.service.*.*(..))"/>
+  <aop:advisor
+  pointcut-ref="businessService"
+  advice-ref="tx-advice"/>
+</aop:config>
+<tx:advice id="tx-advice">
+  <tx:attributes>
+  <tx:method name="*" propagation="REQUIRED"/>
+  </tx:attributes>
+</tx:advice>
+~~~
+
+# 三、Spring AOP API
+
+## 3.1. Pointcut
+
+## 3.2. Advice 
+
+![](../images/AOP Advice.jpeg)
+
+## 3.3. Advisor
+
+## 3.4. AopProxy
+
+Spring AOP的代理对象是委托这个接口的实现生成的。这个接口有两个实现：基于JDK和基于CGLIB。
+
+![](../images/AopProxy.png)
+
+### 3.4.1. JdkDynamicAopProxy
+
+![](../images/JdkDynamicAopProxy.png)
+
+~~~java
+@Override
+public Object getProxy() {
+    return getProxy(ClassUtils.getDefaultClassLoader());
+}
+
+@Override
+public Object getProxy(@Nullable ClassLoader classLoader) {
+    if (logger.isTraceEnabled()) {
+        logger.trace("Creating JDK dynamic proxy: " + this.advised.getTargetSource());
+    }
+    Class<?>[] proxiedInterfaces = AopProxyUtils.completeProxiedInterfaces(this.advised, true);
+    findDefinedEqualsAndHashCodeMethods(proxiedInterfaces);
+    return Proxy.newProxyInstance(classLoader, proxiedInterfaces, this);
+}
+~~~
+
+熟悉的JDK动态代理方式，注意最后一个参数是this，这个参数是InvocationHandler类型的，目标对象执行，拦截逻辑的处理就是封装在InvocationHandler中的，也就是说JdkDynamicAopProxy的作用有：
+
+1. 基于JDK代理动态代理生成目标对象的代理对象；
+2. 作为一个InvocationHandler，处理代理拦截功能。
+
+### 3.4.2. ObjenesisCglibAopProxy
+
+> Spring 4后默认使用
+
+![](../images/ObjenesisCglibAopProxy.png)
+
+~~~java
+protected Object createProxyClassAndInstance(Enhancer enhancer, Callback[] callbacks) {
+    enhancer.setInterceptDuringConstruction(false);
+    enhancer.setCallbacks(callbacks);
+    return (this.constructorArgs != null && this.constructorArgTypes != null ?
+            enhancer.create(this.constructorArgTypes, this.constructorArgs) :
+            enhancer.create());
+}
+~~~
+
+## 3.5. AopProxyFactory
+
+AopProxyFactory的作用是根据Spring AOP的配置来生成AopProxy对象。
+
+~~~java
+public interface AopProxyFactory {
+
+	/**
+	 * Create an {@link AopProxy} for the given AOP configuration.
+	 * @param config the AOP configuration in the form of an
+	 * AdvisedSupport object
+	 * @return the corresponding AOP proxy
+	 * @throws AopConfigException if the configuration is invalid
+	 */
+	AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException;
+
+}
+~~~
+
+默认的实现为DefaultAopProxyFactory。主要的逻辑是根据AOP配置来决定创建JdkDynamicAopProxy或者ObjenesisCglibAopProxy。
+
+~~~java
+@Override
+public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+    if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
+        Class<?> targetClass = config.getTargetClass();
+        if (targetClass == null) {
+            throw new AopConfigException("TargetSource cannot determine target class: " +
+                                         "Either an interface or a target is required for proxy creation.");
+        }
+        if (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) {
+            return new JdkDynamicAopProxy(config);
+        }
+        return new ObjenesisCglibAopProxy(config);
+    }
+    else {
+        return new JdkDynamicAopProxy(config);
+    }
+}
+~~~
+
+## 3.6. 使用ProxyFactoryBean来创建AOP代理
+
+### 3.6.1. 基础信息
+
+![](../images/ProxyFactoryBean.png)
+
+### 3.6.2. 属性
+
+ProxyFactoryBean包含了创建AOP代理需要的一些配置属性：
+
+- 指定想代理的目标
+- 指定是否使用CGLIB
+
+### 3.6.3. 基于JDK和CGLIB代理
+
+目标对象的类未实现任何接口，那么创建的是CGLIB代理；即使proxyTargetClass被设置为false。
+
+如果目标类实现了一个或多个接口，创建的代理类型则基于ProxyFactoryBean的配置。proxyTargetClass被设置为true，则创建CGLIB代理。
+
+### 3.6.4. 内部创建代理流程
+
+![](../images/ProxyFactoryBean方式创建代理流程.png)
+
+## 3.7. 使用ProxyFactory以编程方式创建AOP代理
+
+不依赖于Spring IOC容器创建代理。
+
+~~~java
+ProxyFactory factory = new ProxyFactory(myBusinessInterfaceImpl);
+factory.addAdvice(myMethodInterceptor);
+factory.addAdvisor(myAdvisor);
+MyBusinessInterface tb = (MyBusinessInterface) factory.getProxy();
+~~~
+
+内部创建流程：
+
+![](../images/ProxyFactory创建代理流程.png)
+
+## 3.8. 操纵Advised对象
+
+所有的AOP代理都可以被转换为org.springframework.aop.framework.Advised类型。Advised中包含了很多方法，可以通过这些方法来操纵AOP代理对象。
+
+~~~java
+Advisor[] getAdvisors();
+void addAdvice(Advice advice) throws AopConfigException;
+void addAdvice(int pos, Advice advice) throws AopConfigException;
+void addAdvisor(Advisor advisor) throws AopConfigException;
+void addAdvisor(int pos, Advisor advisor) throws AopConfigException;
+int indexOf(Advisor advisor);
+boolean removeAdvisor(Advisor advisor) throws AopConfigException;
+void removeAdvisor(int index) throws AopConfigException;
+boolean replaceAdvisor(Advisor a, Advisor b) throws AopConfigException;
+boolean isFrozen();
+~~~
+
+默认情况下，即使代理已经创建出来，也可以添加或者移除advisors或interceptors。
+
+~~~java
+Advised advised = (Advised) myObject;
+Advisor[] advisors = advised.getAdvisors();
+int oldAdvisorCount = advisors.length;
+System.out.println(oldAdvisorCount + " advisors");
+// Add an advice like an interceptor without a pointcut
+// Will match all proxied methods
+// Can use for interceptors, before, after returning or throws advice
+advised.addAdvice(new DebugInterceptor());
+// Add selective advice using a pointcut
+advised.addAdvisor(new DefaultPointcutAdvisor(mySpecialPointcut, myAdvice));
+assertEquals("Added two advisors", oldAdvisorCount + 2, advised.getAdvisors().length);
+~~~
+
+## 3.9. 自动代理（auto-proxy）能力
+
+Spring使用内置"bean post processor"提供了自动代理的能力，不需要使用ProxyFactoryBean。
+
+有两种方式来实施：
+
+- 通过使用自动代理创建器引用当前上下文中的特定bean。
+- 基于类级别的元信息
+
+### 3.9.1. BeanNameAutoProxyCreator
+
+规则：代理名称与字面值或通配符匹配的bean。
+
+~~~xml
+<bean class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+  <property name="beanNames" value="jdk*,onlyJdk"/>
+  <property name="interceptorNames">
+      <list>
+      	<value>myInterceptor</value>
+      </list>
+  </property>
+</bean>
+~~~
+
+### 3.9.2. DefaultAdvisorAutoProxyCreator
+
+DefaultAdvisorAutoProxyCreator是一个更通用和非常强大的自动代理创建器。
+
+使用这个自动创建其需要：
+
+- 指定一个DefaultAdvisorAutoProxyCreator bean定义
+- 在相同或相关联的上下文中指定一定数量的advisors。注意，这里只能是advisors，而不能是advicers或者interceptors。因为要根据pointcut来选择需要被代理的bean。
+
+~~~xml
+<bean
+class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
+<bean
+class="org.springframework.transaction.interceptor.TransactionAttributeSourceAdvisor">
+  <property name="transactionInterceptor" ref="transactionInterceptor"/>
+</bean>
+<bean id="customAdvisor" class="com.mycompany.MyAdvisor"/>
+<bean id="businessObject1" class="com.mycompany.BusinessObject1">
+  <!-- Properties omitted -->
+</bean>
+<bean id="businessObject2" class="com.mycompany.BusinessObject2"/>
+~~~
 
