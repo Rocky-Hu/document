@@ -1051,3 +1051,9 @@ DefaultAdvisorAutoProxyCreator会自动评估包含在advisor中的pointcut来�
 
 ## 3.10. 使用TargetSource实现
 
+# 四、Spring  AOP执行原理
+
+## 4.1. 基于XML的配置
+
+## 4.2. AspectJ风格配置
+
