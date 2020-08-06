@@ -46,6 +46,20 @@ Spring默认使用JDK代理。这样任何实现接口的类都可以被代理�
 
 ![](..\images\Spring AOP代理.png)
 
+###  **查看JDK生成的代理类**
+
+~~~java
+-Dsun.misc.ProxyGenerator.saveGeneratedFiles=true
+或 
+System.getProperties().put("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
+~~~
+
+### **查看CGLIB生成的代理类**
+
+~~~java
+System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "D:\\class");  
+~~~
+
 ## 2.2. AspectJ支持
 
 可以用@Aspect注解将一个普通的Java类定义为切面。Spring使用AspectJ提供了的类库来解析和匹配与AspectJ一样的注解。但是，注意的是在AOP运行时还是使用的是Spring AOP，而不需要依赖于AspectJ的编译器和解析器。
