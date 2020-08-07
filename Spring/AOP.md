@@ -1,52 +1,22 @@
 面向对象编程中类是一等公民，而面向切面编程中切面是一等公民。切面是功能的模块化。
 
-# 一、AOP概念
+# 一、代理基础
 
-![](..\images\AOP概念.jpeg)
+## 1.1. 反射
 
-## 1.1. 切面（Aspect）
+如何获取Class对象：
 
-跨多个类的关注点的模块化。事务管理是企业Java应用程序中横切关注的一个很好的例子。
+- 类实例已经存在，则通过可以通过调用getClass()方式获取；
+- 类存在，则通过.class语法获取；
+- 类的全限定名给定，通过Class.forName()方法获取。
 
-## 1.2. 连接点（Join Point）
-
-程序执行过程中的操作点，例如方法的执行或异常的处理。在Spring AOP中，连接点始终代表方法的执行。
-
-## 1.3. 通知（Advice）
-
-切面在特定连接点上采取的操作。不同类型的建议包括“around”、“before”和"after"的建议。许多AOP框架，包括Spring，将通知建模为拦截器，并维护围绕连接点的拦截器链。
-
-> Spring解释：action to take at a joinpoint
-
-## 1.4. 切入点（Pointcut）
-
-匹配连接点的谓词。通知与切入点表达式相关联，并在与切入点匹配的任何连接点上运行(例如，执行具有特定名称的方法)。连接点与切入点表达式匹配的概念是AOP的核心，Spring默认使用AspectJ切入点表达式语言。
-
-## 1.5. 引入（Introduction）
-
-代表类型声明其他方法或字段。Spring AOP允许您将新的接口(和相应的实现)引入任何被建议的对象。例如，您可以使用一个introduction来让一个bean实现一个IsModified接口，以简化缓存。
-
-## 1.6. 目标对象（Target object）
-
-被一个或多个切面通知的对象。也称为“被通知对象”。因为Spring AOP是通过使用运行时代理来实现的，所以这个对象总是一个代理对象。
-
-## 1.7. AOP代理（AOP proxy）
-
-为了实现切面契约(通知方法执行等)而由AOP框架创建的对象。在Spring框架中，AOP代理是JDK动态代理或CGLIB代理。
-
-##  1.8. 织入（Weaving）
-
-将切面与其他应用程序类型或对象链接以创建通知的对象。这可以在编译时(例如，使用AspectJ编译器)、加载时或运行时完成。与其他纯Java AOP框架一样，Spring AOP在运行时执行编织。
-
-# 二、Spring AOP应用
-
-## 2.1. AOP代理
+## 1.2. 代理
 
 Spring默认使用JDK代理。这样任何实现接口的类都可以被代理。同时，Spring也可以使用CGLIB代理，当一个业务对象没有实现任何接口的时候就使用CGLIB代理。也可以强制使用CGLIB代理。
 
 ![](..\images\Spring AOP代理.png)
 
-###  **查看JDK生成的代理类**
+###  查看JDK生成的代理类
 
 ~~~java
 -Dsun.misc.ProxyGenerator.saveGeneratedFiles=true
@@ -54,11 +24,636 @@ Spring默认使用JDK代理。这样任何实现接口的类都可以被代理�
 System.getProperties().put("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
 ~~~
 
-### **查看CGLIB生成的代理类**
+### 查看CGLIB生成的代理类
 
 ~~~java
 System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "D:\\class");  
 ~~~
+
+# 二、Spring AOP初体验
+
+用户接口和实现：
+
+~~~java
+public interface IMyService {
+
+    void printName();
+
+}
+
+public class MyService implements IMyService {
+
+    public void printName() {
+        System.out.println("This is rocky!");
+    }
+    
+}
+
+~~~
+
+使用Spring AOP，为MyService提供代理功能的方式有很多，下面的每一个小节都是一种AOP方式。
+
+## 2.1. 基于ProxyFactoryBean
+
+定义Advice：
+
+~~~java
+public class HijackBeforeMethod implements MethodBeforeAdvice  {
+
+    @Override
+    public void before(Method method, Object[] args, Object target) throws Throwable {
+        System.out.println("===HijackBeforeMethod : Before method hijacked!===");
+    }
+
+}
+~~~
+
+代理MyService配置：
+
+~~~xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="myService" class="org.framework.learning.spring.aop.MyService" />
+
+    <bean id="hijackBeforeMethodBean" class="org.framework.learning.spring.aop.advice.HijackBeforeMethod" />
+
+    <bean id="myServiceProxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <property name="target" ref="myService" /><!-- 目标对象 -->
+        <property name="interceptorNames">
+            <list>
+                <value>hijackBeforeMethodBean</value><!-- Advice增强 -->
+            </list>
+        </property>
+    </bean>
+
+</beans>
+~~~
+
+测试：
+
+~~~java
+public class AopProxyFactoryBeanExample {
+
+    public static void main(String[] args) throws IOException {
+
+        ApplicationContext appContext = new ClassPathXmlApplicationContext(
+                new String[] {"spring-aop-proxyfactorybean.xml"});
+
+        IMyService myService = (IMyService) appContext.getBean("myServiceProxy");
+        myService.printName();
+    }
+
+}
+~~~
+
+运行结果：
+
+~~~text
+===HijackBeforeMethod : Before method hijacked!===
+This is rocky!
+~~~
+
+## 2.2. 基于ProxyFactory（编码方式）
+
+~~~java
+public class AopProxyFactoryExample {
+
+    public static void main(String[] args) {
+
+        IMyService target = new MyService();
+
+        // 定义Advice
+        HijackBeforeMethod hijackBeforeMethod = new HijackBeforeMethod();
+        // 定义Pointcut
+        NameMatchMethodPointcut nameMatchMethodPointcut = new NameMatchMethodPointcut();
+        nameMatchMethodPointcut.addMethodName("printName");
+        // 定义Advisor
+        DefaultPointcutAdvisor defaultPointcutAdvisor = new DefaultPointcutAdvisor();
+        defaultPointcutAdvisor.setAdvice(hijackBeforeMethod);
+        defaultPointcutAdvisor.setPointcut(nameMatchMethodPointcut);
+
+        ProxyFactory proxyFactory = new ProxyFactory(target);
+        proxyFactory.addAdvisor(defaultPointcutAdvisor);
+
+        IMyService myServiceProxy = (IMyService) proxyFactory.getProxy();
+        myServiceProxy.printName();
+    }
+
+}
+~~~
+
+## 2.3. 基于Auto Proxy Creator
+
+看一下上面的两种方式，都是详细得指定目标对象，然后创建代理。当不同的对象有相同的横切逻辑时，采用上面的两种方式，配置文件或者代码中会有很多相同的逻辑。这样操作是不方便的。
+
+由此，Spring提供了“自动代理”的能力。不需要详细的指定目标对象来创建代理。提供了AbstractAutoProxyCreator类，通过子类来提供具体的“自动代理”功能。AbstractAutoProxyCreator实现了BeanPostProcessor，使得"自动代理"具有修改bean定义的能力。
+
+配置如下：
+
+~~~xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="myService" class="org.framework.learning.spring.aop.MyService" />
+
+    <bean id="hijackBeforeMethodBean" class="org.framework.learning.spring.aop.advice.HijackBeforeMethod" />
+
+    <bean class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+        <property name="beanNames">
+            <list>
+                <value>*Service</value><!-- 名字以Service结尾的bean将被拦截 -->
+            </list>
+        </property>
+        <property name="interceptorNames">
+            <list>
+                <value>hijackBeforeMethodBean</value>
+            </list>
+        </property>
+    </bean>
+
+</beans>
+~~~
+
+测试：
+
+~~~java
+public class BeanNameAutoProxyCreatorExample {
+
+    public static void main(String[] args) {
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring-aop-autoproxycreator-beanname.xml");
+        IMyService myService = (IMyService) applicationContext.getBean("myService");
+        myService.printName();
+    }
+
+}
+
+~~~
+
+## 2.4. 基于Spring AOP schema方式
+
+### 2.4.1. 声明Aspect
+
+切面类定义：
+
+~~~java
+public class LoggingAspect {
+
+    public void logBefore() {
+        System.out.println("===logBefore===");
+    }
+
+}
+~~~
+
+切面配置：
+
+~~~xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <aop:config>
+
+        <aop:aspect ref="loggingAspect">
+        </aop:aspect>
+
+    </aop:config>
+
+    <bean id="loggingAspect" class="org.framework.learning.spring.aop.schemabased.LoggingAspect" />
+
+    <bean id="myService" class="org.framework.learning.spring.aop.MyService" />
+
+</beans>
+~~~
+
+### 2.4.2. 声明Pointcut
+
+~~~xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <aop:config>
+
+        <aop:aspect ref="loggingAspect">
+
+            <!-- 声明Pointcut -->
+            <aop:pointcut id="pointcut1" expression="execution(* org.framework.learning.spring.aop.IMyService.printName(..))" />
+            
+        </aop:aspect>
+
+    </aop:config>
+
+    <bean id="loggingAspect" class="org.framework.learning.spring.aop.schemabased.LoggingAspect" />
+
+    <bean id="myService" class="org.framework.learning.spring.aop.MyService" />
+
+</beans>
+~~~
+
+### 2.4.3. 声明Advice
+
+~~~xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <aop:config>
+
+        <aop:aspect ref="loggingAspect">
+
+            <aop:pointcut id="pointcut1" expression="execution(* org.framework.learning.spring.aop.IMyService.printName(..))" />
+
+            <!-- 声明Advice -->
+            <aop:before method="logBefore" pointcut-ref="pointcut1" />
+        
+        </aop:aspect>
+
+    </aop:config>
+
+    <bean id="loggingAspect" class="org.framework.learning.spring.aop.schemabased.LoggingAspect" />
+
+    <bean id="myService" class="org.framework.learning.spring.aop.MyService" />
+
+</beans>
+~~~
+
+测试：
+
+~~~java
+public class AopSchemaBasedExample {
+
+    public static void main(String[] args) {
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring-aop-schema-based.xml");
+        IMyService myService = (IMyService) applicationContext.getBean("myService");
+        myService.getName();
+    }
+
+}
+~~~
+
+## 2.5. 基于AspectJ
+
+### 2.5.1. 导入AspectJ的JAR包
+
+~~~xml
+<dependency>
+  <groupId>org.aspectj</groupId>
+  <artifactId>aspectjweaver</artifactId>
+  <version>1.9.5</version>
+</dependency>
+~~~
+
+### 2.5.2. 启用@AspectJ支持
+
+#### **基于Java Configuration启用**
+
+使用@EnableAspectJAutoProxy注解
+
+~~~
+@Configuration
+@EnableAspectJAutoProxy
+public class AppConfig {
+}
+~~~
+
+####  **基于XML Configuration启用**
+
+~~~xml
+<aop:aspectj-autoproxy/>
+~~~
+
+### 2.5.3. 定义Aspect
+
+~~~java
+@Aspect
+public class TimeLoggingAspect {
+}
+~~~
+
+将@Aspect定义的类托管到Spring：xml中定义bean或者通过自动扫描。
+
+~~~xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <aop:aspectj-autoproxy />
+
+    <bean id="timeLoggingAspect" class="org.framework.learning.spring.aop.aspectj.aspect.TimeLoggingAspect" />
+
+    <bean id="myService" class="org.framework.learning.spring.aop.MyService" />
+
+</beans>
+~~~
+
+### 2.5.4 定义Pointcut
+
+~~~java
+@Aspect
+public class TimeLoggingAspect {
+
+    @Pointcut("execution(* org.framework.learning.spring.aop.IMyService.printName(..))")
+    public void pointcut() {
+    }
+
+}
+~~~
+
+### 2.5.4. 定义Advice
+
+~~~java
+@Aspect
+public class TimeLoggingAspect {
+
+    @Pointcut("execution(* org.framework.learning.spring.aop.IMyService.printName(..))")
+    public void pointcut() {
+    }
+
+    <!-- 定义Advice -->
+    @Before("pointcut()")
+    public void logBefore() {
+        System.out.println("===logBefore===");
+    }
+
+}
+~~~
+
+# 三、AOP概念
+
+## 3.1. AOP架构预览
+
+![](..\images\AOP概念.jpeg)
+
+
+
+## 3.2. 切面（Aspect）
+
+跨多个类的关注点的模块化。事务管理是企业Java应用程序中横切关注的一个很好的例子。
+
+## 3.3. 连接点（Join Point）
+
+程序执行过程中的操作点，例如方法的执行或异常的处理。在Spring AOP中，连接点始终代表方法的执行。
+
+## 3.4. 切入点（Pointcut）
+
+匹配连接点的谓词。通知与切入点表达式相关联，并在与切入点匹配的任何连接点上运行(例如，执行具有特定名称的方法)。连接点与切入点表达式匹配的概念是AOP的核心，Spring默认使用AspectJ切入点表达式语言。
+
+## 3.5. 通知（Advice）
+
+切面在特定连接点上采取的操作。不同类型的建议包括“around”、“before”和"after"的建议。许多AOP框架，包括Spring，将通知建模为拦截器，并维护围绕连接点的拦截器链。
+
+> Spring解释：action to take at a joinpoint.
+
+## 3.6. 引入（Introduction）
+
+代表类型声明其他方法或字段。Spring AOP允许您将新的接口(和相应的实现)引入任何被建议的对象。例如，您可以使用一个introduction来让一个bean实现一个IsModified接口，以简化缓存。
+
+## 3.7. 目标对象（Target object）
+
+被一个或多个切面通知的对象。也称为“被通知对象”。因为Spring AOP是通过使用运行时代理来实现的，所以这个对象总是一个代理对象。
+
+## 3.8. AOP代理（AOP proxy）
+
+为了实现切面契约(通知方法执行等)而由AOP框架创建的对象。在Spring框架中，AOP代理是JDK动态代理或CGLIB代理。
+
+##  3.9. 织入（Weaving）
+
+将切面与其他应用程序类型或对象链接以创建通知的对象。这可以在编译时(例如，使用AspectJ编译器)、加载时或运行时完成。与其他纯Java AOP框架一样，Spring AOP在运行时执行编织。
+
+# 四、Spring AOP API
+
+## 4.1. ClassFilter
+
+类过滤器，检查某个类是否匹配相关的规则。接口定义如下：
+
+~~~java
+@FunctionalInterface
+public interface ClassFilter {
+
+	/**
+	 * Should the pointcut apply to the given interface or target class?
+	 * @param clazz the candidate target class
+	 * @return whether the advice should apply to the given target class
+	 */
+	boolean matches(Class<?> clazz);
+
+
+	/**
+	 * Canonical instance of a ClassFilter that matches all classes.
+	 */
+	ClassFilter TRUE = TrueClassFilter.INSTANCE;
+
+}
+~~~
+
+### 4.1.1. TrueClassFilter
+
+未定义匹配规则，无过滤功能，匹配所有的类，方法实现如下：
+
+~~~java
+@Override
+public boolean matches(Class<?> clazz) {
+    return true;
+}
+~~~
+
+### 4.1.2. AnnotationClassFilter
+
+特定注解类型的过滤器。创建AnnotationClassFilter实例时指定具体的注解类型，类匹配操作是，检查当前被检查类上是否有该注解，若有，则匹配成功；反之，匹配失败。
+
+使用实例如下：
+
+~~~java
+public class AnnotationClassFilterTest {
+
+    public static void main(String[] args) {
+        AnnotationClassFilter annotationClassFilter = new AnnotationClassFilter(AAnotation.class);
+        System.out.println(annotationClassFilter.matches(AClass.class));
+        System.out.println(annotationClassFilter.matches(BClass.class));
+    }
+
+}
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@interface AAnotation {
+}
+
+@AAnotation
+class AClass {
+}
+
+class BClass {
+}
+~~~
+
+执行结果：
+
+~~~java
+true
+false
+~~~
+
+### 4.1.3. RootClassFilter
+
+实现的逻辑如下：
+
+~~~java
+@Override
+public boolean matches(Class<?> candidate) {
+    return this.clazz.isAssignableFrom(candidate);
+}
+~~~
+
+使用示例：
+
+~~~java
+public class RootClassFilterTest {
+
+    public static void main(String[] args) {
+        RootClassFilter rootClassFilter = new RootClassFilter(A.class);
+        System.out.println(rootClassFilter.matches(A.class));
+        System.out.println(rootClassFilter.matches(AA.class));
+        System.out.println(rootClassFilter.matches(B.class));
+    }
+
+}
+
+class A {
+}
+
+class AA extends A {
+}
+
+class B {
+}
+~~~
+
+执行结果：
+
+~~~java
+true
+true
+false
+~~~
+
+## 4.2. MethodMatcher
+
+ClassFilter是对类匹配的检查，而MethodMatcher是对方法匹配的检查。
+
+接口定义如下：
+
+~~~java
+public interface MethodMatcher {
+    
+    boolean matches(Method method, Class<?> targetClass);
+    
+    boolean isRuntime();
+    
+    boolean matches(Method method, Class<?> targetClass, Object... args);
+
+}
+~~~
+
+
+
+## 4.3. Pointcut接口
+
+Spring AOP通过Pointcut来将切面的Advice应用到指定的Jointpoint上。该接口具有类过滤和方法匹配的功能。
+
+Pointcut接口的定义如下：
+
+~~~java
+public interface Pointcut {
+
+	/**
+	 * Return the ClassFilter for this pointcut.
+	 * @return the ClassFilter (never {@code null})
+	 */
+	ClassFilter getClassFilter();
+
+	/**
+	 * Return the MethodMatcher for this pointcut.
+	 * @return the MethodMatcher (never {@code null})
+	 */
+	MethodMatcher getMethodMatcher();
+
+
+	/**
+	 * Canonical Pointcut instance that always matches.
+	 */
+	Pointcut TRUE = TruePointcut.INSTANCE;
+
+}
+~~~
+
+ClassFilter用于类匹配判断，MethodMatcher用于方法匹配判断。
+
+Pointcut接口的实现具有Jointpoint定位功能内部就是通过ClassFilter和MethodMatcher来实现的。
+
+
+
+### 4.1.1. NameMatchMethodPointcut
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 二、Spring AOP应用
 
 ## 2.2. AspectJ支持
 
