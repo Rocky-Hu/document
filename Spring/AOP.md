@@ -565,6 +565,12 @@ public interface MethodMatcher {
 }
 ~~~
 
+matchs(Method，Class)方法用于测试此切入点是否与目标类上的给定方法匹配。 创建AOP代理时可以执行此评估，以避免需要对每个方法调用进行测试。如果两个参数的match方法对于给定的方法返回true，并且MethodMatcher的isRuntime()方法返回true，则在每次方法调用时将调用三个参数的match方法。这样，切入点就可以在执行目标建议之前立即查看传递给方法调用的参数。
+
+大多数MethodMatcher实现都是静态的，这意味着它们的isRuntime()方法返回false。 在这种情况下，永远不会调用三参数匹配方法。
+
+> 如果可能，请尝试使切入点成为静态，从而允许AOP框架在创建AOP代理时缓存切入点评估的结果。
+
 
 
 ## 4.3. Pointcut接口
@@ -601,9 +607,178 @@ ClassFilter用于类匹配判断，MethodMatcher用于方法匹配判断。
 
 Pointcut接口的实现具有Jointpoint定位功能内部就是通过ClassFilter和MethodMatcher来实现的。
 
+Pointcut分静态的和动态的。
 
+- 静态的不考虑方法参数，只基于类和方法来做评估。当方法第一次被调用的使用，会评估pointcut，之后就不会再次做评估，也就是说静态pointcut只会评估一次；
+- 动态的会考虑方法参数，因为方法参数是变化的，所以方法每次被调用的时候都会进行pointcut评估，不会缓存评估结果。
 
 ### 4.1.1. NameMatchMethodPointcut
+
+简单方法名称匹配的Pointcut bean，作为regexp模式的替代方法。
+
+创建该类对象的时候会指定目标匹配的方法名（具体的名称或简单的匹配模式"xxx\*", "\*xxx" and "\*xxx\*"）。
+
+~~~java
+public class NameMatchMethodPointcutTest {
+
+    private Method sayHello;
+
+    private Method sayGoodbye;
+
+    @Before
+    public void setUp() throws NoSuchMethodException {
+        sayHello = TestBean.class.getMethod("sayHello");
+        sayGoodbye = TestBean.class.getMethod("sayGoodbye");
+    }
+
+    @Test
+    public void testSimpleNameMatch() {
+        NameMatchMethodPointcut nameMatchMethodPointcut = new NameMatchMethodPointcut();
+        nameMatchMethodPointcut.setMappedName("sayHello");
+
+        Assert.assertTrue(nameMatchMethodPointcut.matches(sayHello, TestBean.class));
+        Assert.assertFalse(nameMatchMethodPointcut.matches(sayGoodbye, TestBean.class));
+    }
+
+    @Test
+    public void testMultipleNamesMatch() {
+        NameMatchMethodPointcut nameMatchMethodPointcut = new NameMatchMethodPointcut();
+        nameMatchMethodPointcut.setMappedNames("sayHello", "sayGoodbye");
+
+        Assert.assertTrue(nameMatchMethodPointcut.matches(sayHello, TestBean.class));
+        Assert.assertTrue(nameMatchMethodPointcut.matches(sayGoodbye, TestBean.class));
+    }
+
+    @Test
+    public void testRegexpMatch() {
+        NameMatchMethodPointcut nameMatchMethodPointcut = new NameMatchMethodPointcut();
+        nameMatchMethodPointcut.setMappedName("say*");
+
+        Assert.assertTrue(nameMatchMethodPointcut.matches(sayHello, TestBean.class));
+        Assert.assertTrue(nameMatchMethodPointcut.matches(sayGoodbye, TestBean.class));
+    }
+
+}
+
+class TestBean {
+
+    public void sayHello() {
+        System.out.println("Hello!");
+    }
+
+    public void sayGoodbye() {
+        System.out.println("Bye!");
+    }
+
+}
+~~~
+
+### 4.1.2. JdkRegexpMethodPointcut
+
+基于Jdk Regexp的方法匹配切入点。
+
+使用示例如下：
+
+~~~java
+public class JdkRegexpMethodPointcutTest {
+
+    private Method sayHello;
+    private Method sayGoodbye;
+
+    @Before
+    public void setUp() throws NoSuchMethodException {
+       sayHello = TestBean1.class.getMethod("sayHello");
+       sayGoodbye = TestBean1.class.getMethod("sayGoodbye");
+    }
+
+    @Test
+    public void test() {
+        JdkRegexpMethodPointcut jdkRegexpMethodPointcut = new JdkRegexpMethodPointcut();
+        jdkRegexpMethodPointcut.setPattern("org.framework.learning.spring.aop.pointcut.TestBean1.*");
+
+        Assert.assertTrue(jdkRegexpMethodPointcut.matches(sayHello, TestBean1.class));
+        Assert.assertTrue(jdkRegexpMethodPointcut.matches(sayGoodbye, TestBean1.class));
+    }
+
+}
+
+class TestBean1 {
+
+    public void sayHello() {
+        System.out.println("Hello!");
+    }
+
+    public void sayGoodbye() {
+        System.out.println("Bye!");
+    }
+
+}
+~~~
+
+### 4.1.3. AnnotationMatchingPointcut
+
+基于注解的切入点匹配，可寻找类和方法上的注解。
+
+~~~java
+public class AnnotationMatchingPointTest {
+
+    @Test
+    public void test() throws NoSuchMethodException {
+        AnnotationMatchingPointcut annotationMatchingPointcut = new AnnotationMatchingPointcut(AClazzAnnotation.class, AMethodAnnotation.class);
+
+        Assert.assertTrue(annotationMatchingPointcut.getClassFilter().matches(Clazz1.class));
+        Assert.assertFalse(annotationMatchingPointcut.getClassFilter().matches(Clazz2.class));
+
+        Assert.assertTrue(annotationMatchingPointcut.getMethodMatcher().matches(Clazz1.class.getMethod("sayHi"), Clazz1.class));
+        Assert.assertFalse(annotationMatchingPointcut.getMethodMatcher().matches(Clazz1.class.getMethod("sayBye"), Clazz1.class));
+
+        Assert.assertTrue(annotationMatchingPointcut.getMethodMatcher().matches(Clazz2.class.getMethod("sayHi"), Clazz2.class));
+        Assert.assertTrue(annotationMatchingPointcut.getMethodMatcher().matches(Clazz2.class.getMethod("sayBye"), Clazz2.class));
+
+    }
+
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@interface AClazzAnnotation {}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface AMethodAnnotation {}
+
+@AClazzAnnotation
+class Clazz1 {
+
+    @AMethodAnnotation
+    public void sayHi() {
+        System.out.println("Hi");
+    }
+
+    public void sayBye() {
+        System.out.println("Bye");
+    }
+
+}
+
+class Clazz2 {
+
+    @AMethodAnnotation
+    public void sayHi() {
+        System.out.println("Hi");
+    }
+
+    @AMethodAnnotation
+    public void sayBye() {
+        System.out.println("Bye");
+    }
+
+}
+~~~
+
+### 4.1.4. AspectJExpressionPointcut
+
+基于AspectJ表达式的切入点。
 
 
 
