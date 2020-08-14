@@ -480,9 +480,53 @@ public void run() {
 
 ## 2.4. read only
 
+java.sql.Connection接口有下面的方法：
 
+~~~java
+void setReadOnly(boolean readOnly) throws SQLException;
+~~~
 
-# 三、java.sql.Statement
+该方法的作用为：
+
+> Puts this connection in read-only mode as a hint to the driver to enable database optimizations.
+
+作用是设置为只读模式，告诉驱动启用数据库优化。
+
+上面的说明还不够具体，通过具体的驱动实现类来看看设置的作用。
+
+com.mysql.jdbc.ConnectionImpl#setReadOnly
+
+~~~java
+public void setReadOnly(boolean readOnlyFlag) throws SQLException {
+    checkClosed();
+
+    setReadOnlyInternal(readOnlyFlag);
+}
+~~~
+
+com.mysql.jdbc.ConnectionImpl#setReadOnlyInternal
+
+~~~java
+public void setReadOnlyInternal(boolean readOnlyFlag) throws SQLException {
+    // note this this is safe even inside a transaction
+    if (getReadOnlyPropagatesToServer() && versionMeetsMinimum(5, 6, 5)) {
+        if (!getUseLocalSessionState() || (readOnlyFlag != this.readOnly)) {
+            execSQL(null, "set session transaction " + (readOnlyFlag ? "read only" : "read write"), -1, null, DEFAULT_RESULT_SET_TYPE,
+                    DEFAULT_RESULT_SET_CONCURRENCY, false, this.database, null, false);
+        }
+    }
+
+    this.readOnly = readOnlyFlag;
+}
+~~~
+
+MySQL JDBC驱动的实现中，当设置为read only模式，会执行下面的命令：
+
+~~~sql
+set session transaction read only
+~~~
+
+将当前会话的事务设置为只读模式。只读事务有什么作用呢？在MySQL的官方文档中有说明，请查阅。
 
 ## 3.1. query timeout
 
