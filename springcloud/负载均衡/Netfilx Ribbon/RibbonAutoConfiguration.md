@@ -1,0 +1,8 @@
+Ribbon的自动配置类。
+
+这个自动化配置的主要作用就是创建SpringClientFactory实例和LoadBalancerClient实例。
+
+SpringClientFactory实例负责Ribbon基础组件的注册。而LoadBalancerClient实例返回的是基于Ribbon的负载均衡客户端类。
+
+> 回忆一下被@LoadBalanced注解的RestTemplate实例拥有负载均衡能力的原理。
+

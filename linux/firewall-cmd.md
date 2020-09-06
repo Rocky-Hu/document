@@ -7,7 +7,7 @@ firewall-cmd --list-ports
 开启端口：
 
 ~~~
-firewall-cmd --zone=public --add-port=80/tcp --permanent  
+firewall-cmd --zone=public --add-port=6379/tcp --permanent  
 ~~~
 
 命令含义：

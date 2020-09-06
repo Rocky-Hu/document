@@ -40,6 +40,18 @@ public class EurekaServerMarkerConfiguration {
 
 定义了一个标记Bean，自动配置化类中如果发现有这个bean存在，则进行相关联的bean的实例化。
 
+~~~
+@Configuration(proxyBeanMethods = false)
+@Import(EurekaServerInitializerConfiguration.class)
+@ConditionalOnBean(EurekaServerMarkerConfiguration.Marker.class)
+@EnableConfigurationProperties({ EurekaDashboardProperties.class,
+		InstanceRegistryProperties.class })
+@PropertySource("classpath:/eureka/server.properties")
+public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
+
+}
+~~~
+
 ## 第三种：通过@Import导入ImportSelector
 
 ~~~

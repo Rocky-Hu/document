@@ -17,5 +17,13 @@ tcp6       0      0 :::6379                 :::*                    LISTEN      
 tcp6       0      0 :::22                   :::*                    LISTEN      1023/sshd 
 ~~~
 
+## 2.2. 查看TCP连接数
 
+~~~verilog
+netstat -nat | grep -i "80" | wc -l
+~~~
+
+
+
+ 
 
