@@ -53,7 +53,11 @@ If the ACK flag is set then the value of this field is the next sequence number 
 
 - PSH (1 bit)
 
+  Push function. Asks to push the buffered data to the receiving application.
+
 - RST (1 bit)
+
+  Reset the connection.
 
 - SYN (1 bit)
 
