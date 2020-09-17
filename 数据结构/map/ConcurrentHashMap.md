@@ -78,6 +78,8 @@ sshift表示左移的次数。
 
 ssize表示最终确定的Segment的长度（2次幂）。
 
+> ConcurrentHashMap初始化后Segment数组的长度是不会扩容的。
+
 ### Segment对象内的HashEntry数组长度
 
 Segment数组的长度确定了，下面就是确定Segment对象内的HashEntry数组的长度。
@@ -168,7 +170,124 @@ while ((seg = (Segment<K,V>)UNSAFE.getObjectVolatile(ss, u))
 }
 ~~~
 
-### 1.3.3. 
+### 1.3.3. 将元素put入Segment的HashEntry数组中
+
+#### put
+
+~~~java
+ final V put(K key, int hash, V value, boolean onlyIfAbsent) {
+   /**
+   * 获取锁操作：获得锁则node=null，未获取执行scanAndLockForPut方法
+   */
+   HashEntry<K,V> node = tryLock() ? null : scanAndLockForPut(key, hash, value);
+   V oldValue;
+   try {
+     // Segment对象内的HashEntry数组
+     HashEntry<K,V>[] tab = table;
+     // 计算出即将要存放的HashEntry数组索引
+     int index = (tab.length - 1) & hash;
+     // 获取数组当前索引位置的头部元素
+     HashEntry<K,V> first = entryAt(tab, index);
+     for (HashEntry<K,V> e = first;;) {
+       if (e != null) {// 从头部元素开始循环搜索链表确认是否存在当前key，如果存在则更新数值，并返回
+         K k;
+         if ((k = e.key) == key ||
+             (e.hash == hash && key.equals(k))) {
+           oldValue = e.value;
+           if (!onlyIfAbsent) {
+             e.value = value;
+             ++modCount;
+           }
+           break;
+         }
+         e = e.next;
+       }
+       else {
+         if (node != null)// 已经通过scanAndLockForPut方法创建出来了新的HashEntry对象
+           node.setNext(first);
+         else
+           node = new HashEntry<K,V>(hash, key, value, first);
+         int c = count + 1;
+         if (c > threshold && tab.length < MAXIMUM_CAPACITY)// 触发扩容操作
+           rehash(node);
+         else
+           setEntryAt(tab, index, node);// 新存入的元素作为链表的头节点
+         ++modCount;
+         count = c;
+         oldValue = null;
+         break;
+       }
+     }
+   } finally {
+     unlock();
+   }
+   return oldValue;
+ }
+~~~
+
+#### scanAndLockForPut
+
+~~~java
+// put起始步骤中未获取到锁的处理方法：通过循环不断尝试获取Segment锁
+private HashEntry<K,V> scanAndLockForPut(K key, int hash, V value) {
+    HashEntry<K,V> first = entryForHash(this, hash);// 获取计算出的数组索引位所在的链表的头部元素
+  																									// 多线程下当前获取到的可能是脏数据
+    HashEntry<K,V> e = first;
+    HashEntry<K,V> node = null;
+    int retries = -1; // negative while locating node
+    while (!tryLock()) {
+        HashEntry<K,V> f; // to recheck first below
+        if (retries < 0) {// retries存于初始状态（后面逻辑中会使得retries复位）
+            if (e == null) {
+                if (node == null) // speculatively create node
+                    node = new HashEntry<K,V>(hash, key, value, null);
+                retries = 0;
+            }
+            else if (key.equals(e.key))
+                retries = 0;
+            else
+                e = e.next;// 顺着链表一直找，直到找到尾部或者是发现链表中已存在相同的key则停止
+        }
+      	// 重试次数如果超过 MAX_SCAN_RETRIES（单核1多核64），那么不抢了（不用这种忙获取方式了），进入到阻塞队列等待锁
+        //    lock() 是阻塞方法，直到获取锁后返回
+        else if (++retries > MAX_SCAN_RETRIES) {
+            lock();
+            break;
+        }
+        else if ((retries & 1) == 0 &&
+                 (f = entryForHash(this, hash)) != first) {// 发现头部已经改变了，则说明有其他线程操作了，则重新来
+            e = first = f; // re-traverse if entry changed
+            retries = -1;
+        }
+    }
+    return node;
+}
+~~~
+
+#### rehash
+
+## 1.4. get操作
+
+## 1.5. remove操作
+
+# 二、1.8
+
+## 1.8.1. sizeCtl
+
+- -1：有线程正在初始化
+- -(1 + the number of active resizing threads)
+- 0：默认值
+- 初始化时指定的数组的长度
+
+## 1.8.2. put操作
+
+初始化Node数组，若sizeCtl为-1，则说明有线程正在初始化，则让出CPU，做自旋操作。
+
+
+
+
+
+
 
 
 
