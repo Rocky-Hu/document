@@ -96,3 +96,12 @@ lock.unlock();
 1599726451.991810 [0 lua] "publish" "redisson_lock__channel:{redisson_reentrant_lock}" "0"
 ~~~
 
+# 三、续命
+
+~~~java
+@Override
+public boolean tryLock() {
+    return get(tryLockAsync());
+}
+~~~
+
