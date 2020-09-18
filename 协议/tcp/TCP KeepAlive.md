@@ -55,3 +55,6 @@ HTTP 1.0 和 1.1 在 TCP连接使用方面的差异如下图所示：
 HTTP协议的Keep-Alive意图在于TCP连接复用，同一个连接上串行方式传递请求-响应数据；
 
 TCP的Keepalive机制意图在于探测连接的对端是否存活。
+
+> TCP Keep Alive用于探测对端是否存在，而HTTP Keep Alive用于协商以复用 TCP 连接。即便一个TCP连接未启用Keep Alive 功能，也不妨碍 HTTP层面开启长连接。
+
