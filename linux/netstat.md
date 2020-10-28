@@ -23,6 +23,16 @@ tcp6       0      0 :::22                   :::*                    LISTEN      
 netstat -nat | grep -i "80" | wc -l
 ~~~
 
+## 2.3. 根据进程号查看监听的端口
+
+~~~verilog
+[root@localhost bin]# netstat -nap|grep 42609
+tcp6       0      0 :::8848                 :::*                    LISTEN      42609/java                                                                                               
+udp6       0      0 :::51107                :::*                                42609/java                                                                                               
+unix  2      [ ]         STREAM     CONNECTED     214923   42609/java
+unix  2      [ ]         STREAM     CONNECTED     214739   42609/java
+~~~
+
 
 
  
