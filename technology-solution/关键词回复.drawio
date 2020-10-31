@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2020-10-31T14:22:33.834Z" agent="5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36" etag="gghZBW1W_Or7hmaXSmOs" version="13.8.8" type="github">
+<mxfile host="app.diagrams.net" modified="2020-10-31T14:26:56.656Z" agent="5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36" etag="eArDl-TqzLBr-1l8IHdy" version="13.8.8" type="github">
   <diagram id="JH-I-7RGB3wSWRfC5hcS" name="Page-1">
-    <mxGraphModel dx="1008" dy="422" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1008" dy="1591" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -16,8 +16,60 @@
         <mxCell id="_y5ytE5uwPRHJYw2xF_R-4" value="关键词 + 企微号&amp;nbsp;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="90" y="135" width="130" height="30" as="geometry" />
         </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="_y5ytE5uwPRHJYw2xF_R-9" target="_y5ytE5uwPRHJYw2xF_R-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="_y5ytE5uwPRHJYw2xF_R-9" value="企微号" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="250" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_y5ytE5uwPRHJYw2xF_R-10" target="_y5ytE5uwPRHJYw2xF_R-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-12" value="查询企微号是否有关键字回复配置" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="_y5ytE5uwPRHJYw2xF_R-11">
+          <mxGeometry x="0.4019" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="_y5ytE5uwPRHJYw2xF_R-10" target="_y5ytE5uwPRHJYw2xF_R-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-19" value="查询企微号配置的关键词" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="_y5ytE5uwPRHJYw2xF_R-18">
+          <mxGeometry x="-0.1176" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-10" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" vertex="1" parent="1">
+          <mxGeometry x="414" y="-80" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="_y5ytE5uwPRHJYw2xF_R-13" target="_y5ytE5uwPRHJYw2xF_R-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-13" value="有效期判断" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="_y5ytE5uwPRHJYw2xF_R-15" target="_y5ytE5uwPRHJYw2xF_R-24">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-15" value="规则匹配" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="780" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="_y5ytE5uwPRHJYw2xF_R-17" target="_y5ytE5uwPRHJYw2xF_R-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-17" value="" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="-125" width="280" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-20" value="关键词1" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="-90" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-21" value="关键词2" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="850" y="-90" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-22" value="关键词2" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="-30" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-24" value="回复" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="130" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
