@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2020-10-31T14:21:33.197Z" agent="5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36" etag="phM3Q1NaSMMm_a7x_CqL" version="13.8.8" type="github">
+<mxfile host="app.diagrams.net" modified="2020-10-31T14:22:33.834Z" agent="5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36" etag="gghZBW1W_Or7hmaXSmOs" version="13.8.8" type="github">
   <diagram id="JH-I-7RGB3wSWRfC5hcS" name="Page-1">
     <mxGraphModel dx="1008" dy="422" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -15,6 +15,9 @@
         </mxCell>
         <mxCell id="_y5ytE5uwPRHJYw2xF_R-4" value="关键词 + 企微号&amp;nbsp;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="90" y="135" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="_y5ytE5uwPRHJYw2xF_R-9" value="企微号" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="130" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
