@@ -15,3 +15,7 @@
 7. websocket、comet、long polling
 
 8. java Comparator实现原理
+
+9. like索引问题
+
+10. 
