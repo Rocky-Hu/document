@@ -36,5 +36,11 @@ systemctl stop firewalld.service
 systemctl disable firewalld.service   
 ~~~
 
+查看防火墙状态：
+
+~~~
+firewall-cmd --state
+~~~
+
 
 

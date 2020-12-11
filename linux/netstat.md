@@ -33,6 +33,13 @@ unix  2      [ ]         STREAM     CONNECTED     214923   42609/java
 unix  2      [ ]         STREAM     CONNECTED     214739   42609/java
 ~~~
 
+## 2.4. 查看端口占用情况
+
+~~~
+[root@localhost logs]# netstat -tunlp|grep 8080
+tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      1743/puma 4.3.5.git
+~~~
+
 
 
  
