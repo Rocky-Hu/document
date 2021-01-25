@@ -18,4 +18,8 @@
 
 9. like索引问题
 
-10. 
+10. left join去重
+
+11. distinct实现原理
+
+12. 
