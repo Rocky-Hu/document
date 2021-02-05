@@ -1,1 +1,1 @@
-![](../images/SQL Joins.jpg)
+![](../../images/SQL Joins.jpg)

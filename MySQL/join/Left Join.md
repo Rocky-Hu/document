@@ -259,5 +259,5 @@ ORDER BY tcgm.id DESC;
 
 执行计划：
 
-![](../images/left_join_filesort.png)
+![](../../images/left_join_filesort.png)
 
