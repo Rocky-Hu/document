@@ -1,0 +1,2 @@
+KeyGenerator类与KeyPairGenerator类相似，KeyGenerator类用来生成秘密密钥，我们称它为秘密密钥生成器。
+
