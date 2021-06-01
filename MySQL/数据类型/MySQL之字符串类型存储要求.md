@@ -2,7 +2,7 @@
 
 | 数据类型                    | 存储要求                                                     |
 | :-------------------------- | :----------------------------------------------------------- |
-| CHAR(M)                     | 特殊情况查看 [COMPACT Row Format Storage Characteristics](https://dev.mysql.com/doc/refman/5.7/en/innodb-row-format.html#innodb-compact-row-format-characteristics). 否则，存储需要M× w字节，0<=M<=255，其中w是字符集中最大长度字符所需的字节数。 |
+| CHAR(M)                     | 存储需要M× w字节，0<=M<=255，其中w是字符集中最大长度字符所需的字节数。（特殊情况查看 [COMPACT Row Format Storage Characteristics](https://dev.mysql.com/doc/refman/5.7/en/innodb-row-format.html#innodb-compact-row-format-characteristics)） |
 | BINARY(M)                   | *`M`* 个字节, 0 `<= M <=` 255                                |
 | VARCHAR(M),VARBINARY(M)     | 如果列所需的字节数小于255，则长度前缀为1字节，存储需要L+1字节。如果列需要超过255个字节，则长度前缀为两个长度字节，存储需要L+2字节。 |
 | TINYBLOB, TINYTEXT          | *`L`* + 1 字节, 其中 *`L`* < 28                              |
@@ -11,4 +11,20 @@
 | LONGBLOB, LONGTEXT          | *`L`* + 4 字节, 其中 *`L`* < 232                             |
 | ENUM('value1','value2',...) | 1或2字节，取决于枚举值的数目（最大值为65535个值）            |
 | SET('value1','value2',...)  | 1、2、3、4或8字节，取决于集合元素的数量（最多64个元素）      |
+
+可变长度字符串类型使用长度前缀加数据进行存储。 长度前缀根据数据类型需要1到4个字节。 例如，MEDIUMTEXT值的存储需要 L 个字节来存储值加上三个字节来存储值的长度。
+
+要计算用于存储特定 CHAR、VARCHAR 或 TEXT 列值的字节数，您必须考虑用于该列的字符集以及该值是否包含多字节字符。 特别是，在使用 utf8 Unicode 字符集时，必须记住并非所有字符都使用相同数量的字节。 utf8mb3 和 utf8mb4 字符集每个字符最多分别需要三个和四个字节。
+
+VARCHAR、VARBINARY 以及 BLOB 和 TEXT 类型是可变长度类型。 对于它们，存储要求取决于以下因素：
+
+- 列值的实际长度
+- 列的最大可能长度
+- 用于列的字符集，因为某些字符集包含多字节字符
+
+例如，VARCHAR(255) 列可以保存最大长度为 255 个字符的字符串。 假设该列使用latin1字符集（每个字符一个字节），实际需要存储的是字符串的长度（L），加上一个字节来记录字符串的长度。 对于字符串 'abcd'，L 为 4，存储要求为 5 个字节。 如果改为声明同一列使用 ucs2 双字节字符集，则存储要求为 10 个字节： 'abcd' 的长度为 8 个字节，该列需要两个字节来存储长度，因为最大长度大于 255 （最多 510 个字节）。
+
+可以存储在 VARCHAR 或 VARBINARY 列中的有效最大字节数受制于 65,535 字节的最大行大小，该大小在所有列之间共享。 对于存储多字节字符的 VARCHAR 列，有效的最大字符数较少。 例如，utf8mb4 字符可能需要每个字符最多四个字节，因此可以将使用 utf8mb4 字符集的 VARCHAR 列声明为最多 16,383 个字符。
+
+InnoDB 将长度大于或等于 768 字节的固定长度字段编码为可变长度字段，可以在页外存储。 例如，如果字符集的最大字节长度大于 3，比如使用utf8mb4字符集，则 CHAR(255) 列会超过 768 个字节。
 
