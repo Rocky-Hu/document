@@ -24,4 +24,8 @@
 
 12. 加密算法
 
-13. 
+13. Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms
+
+14. Non-intrusive MPSC node-based queue
+
+15. 
