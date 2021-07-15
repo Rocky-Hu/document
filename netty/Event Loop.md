@@ -2,5 +2,5 @@
 
 https://www.digitalocean.com/community/tutorials/understanding-the-event-loop-callbacks-promises-and-async-await-in-javascript
 
-
+![](../images/netty/event loop.png)
 
