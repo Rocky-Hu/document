@@ -1,5 +1,7 @@
 # Why must classes be marked serializable in order to be written to an `ObjectOutputStream`?
 
+https://www.oracle.com/java/technologies/javase/serializationfaq-jsp.html
+
 The decision to require that classes implement the `java.io.Serializable` interface was not made lightly. The design called for a balance between the needs of developers and the needs of the system to be able to provide a predictable and safe mechanism. The most difficult design constraint to satisify was the safety and security of Java classes.
 
 If classes were to be marked as being serializable, the design team worried that a developer, either out of forgetfulness, laziness, or ignorance might not declare a class as being `Serializable` and then make that class useless for RMI or for purposes of persistence. We worried that the requirement would place on a developer the burden of knowing how a class was to be used by others in the future, an essentially unknown condition. Indeed, our preliminary design, as reflected in the alpha API, concluded that the default case for a class ought to be that the objects in the class be serializable. We later changed our design only after security and correctness considerations convinced us that the default had to be that an object not be serialized.
