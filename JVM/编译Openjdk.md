@@ -1,5 +1,7 @@
 http://hg.openjdk.java.net/
 
+http://hg.openjdk.java.net/jdk8/jdk8/raw-file/tip/README-builds.html
+
 # **安装 "Bootstrap JDK"**
 
 ~~~
