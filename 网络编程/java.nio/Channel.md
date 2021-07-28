@@ -1,3 +1,5 @@
+![](../../images/io/Channels.png)
+
 # 一、ServerSocketChannel
 
 ## 1.1. open
