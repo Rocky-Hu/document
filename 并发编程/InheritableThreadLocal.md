@@ -1,0 +1,2 @@
+执行原理：Thread类的init的方法中会判断当前线程的父线程的inheritableThreadLocals属性是否为空，如果不为空则将父进程的inheritableThreadLocals属性内容复制一份到自己的inheritableThreadLocals属性上来。
+

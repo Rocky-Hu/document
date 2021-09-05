@@ -4,3 +4,15 @@ https://www.digitalocean.com/community/tutorials/understanding-the-event-loop-ca
 
 ![](../images/netty/event loop.png)
 
+# EventLoopGroup
+
+特殊的EventExecutorGroup，允许注册Channel。
+
+
+
+
+
+
+
+
+

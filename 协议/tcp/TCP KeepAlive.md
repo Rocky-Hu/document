@@ -27,6 +27,16 @@ In the next section we will distinguish between the two target tasks for keepali
 - Checking for dead peers
 - Preventing disconnection due to network inactivity
 
+- 我们都知道 TCP 的三次握手和四次挥手。当两端通过三次握手建立 TCP 连接后，就可以传输数据了，数据传输完毕，连接并不会自动关闭，而是一直保持。只有两端分别通过发送各自的 FIN 报文时，才会关闭自己侧的连接。
+- 这个关闭机制看起来简单明了，但实际网络环境千变万化，衍生出了各种问题。假设因为实现缺陷、突然崩溃、恶意攻击或网络丢包等原因，一方一直没有发送 FIN 报文，则连接会一直保持并消耗着资源，为了防止这种情况，一般接收方都会主动中断一段时间没有数据传输的 TCP 连接，比如 LVS 会默认中断 90 秒内没有数据传输的 TCP 连接，F5 会中断 5 分钟内没有数据传输的 TCP 连接
+- 但有的时候我们的确不希望中断空闲的 TCP 连接，因为建立一次 TCP 连接需要经过一到两次的网络交互，且由于 TCP 的 slow start 机制，新的 TCP 连接开始数据传输速度是比较慢的，我们希望通过连接池模式，保持一部分空闲连接，当需要传输数据时，可以从连接池中直接拿一个空闲的 TCP 连接来全速使用，这样对性能有很大提升
+- 为了支持这种情况，TCP 实现了 KeepAlive 机制。KeepAlive 机制并不是 TCP 规范的一部分，但无论 Linux 和 Windows 都实现实现了该机制。TCP 实现里 KeepAlive 默认都是关闭的，且是每个连接单独设置的，而不是全局设置
+  Implementors MAY include "keep-alives" in their TCP implementations, although this practice is not universally accepted.  If keep-alives are included, the application MUST  be able to turn them on or off for each TCP connection, and they MUST default to off.
+- 另外有一个特殊情况就是，当某应用进程关闭后，如果还有该进程相关的 TCP 连接，一般来说操作系统会自动关闭这些连接
+
+TCP和HTTP中的KeepAlive机制总结
+原文链接： https://xie.infoq.cn/article/398b82c2b4300f928108ac605
+
 # 3. 开启和设置
 
 1. KeepAlive默认情况下是关闭的，可以被上层应用开启和关闭
