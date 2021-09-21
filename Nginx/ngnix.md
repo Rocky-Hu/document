@@ -30,6 +30,15 @@ ln -s /usr/local/nginx/sbin/nginx /usr/bin/nginx
 
 ~~~
 
+步骤：
+
+~~~
+yum install gcc-c++
+
+~~~
+
+
+
 # 下载rtmp模块
 
 ~~~
