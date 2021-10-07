@@ -60,3 +60,17 @@ There are other MP3 encoders and other H.264 encoders. Most of them are propriet
 
 https://api.video/blog/video-trends/what-do-my-video-output-live-stream-details-from-ffmpeg-mean
 
+# [Differentiate between error and standard terminal log with ffmpeg - nodejs](https://stackoverflow.com/questions/35169650/differentiate-between-error-and-standard-terminal-log-with-ffmpeg-nodejs)
+
+https://stackoverflow.com/questions/35169650/differentiate-between-error-and-standard-terminal-log-with-ffmpeg-nodejs
+
+Ffmpeg outputs all of its logging data to `stderr`, to leave `stdout` free for piping the output data to some other program or another ffmpeg instance.
+
+When running ffmpeg as an automatic process it's often useful give the option
+
+```js
+-loglevel error
+```
+
+which turns it completely mute in a normal scenario and only outputs the error data (to stderr), which is normally what you would expect from a command-line program.
+

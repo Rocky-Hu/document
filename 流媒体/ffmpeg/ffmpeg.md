@@ -445,7 +445,7 @@ https://livestream.a.video/
 
 https://github.com/apivideo/nodejs-api-client
 
-
+https://github.com/fluent-ffmpeg/node-fluent-ffmpeg
 
 关于libdav1d-dev无法安装：
 
@@ -458,6 +458,10 @@ sudo apt update
 
 ffmpeg -i rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov -c copy -f flv rtmp://127.0.0.1:1935/mylive/1 -loglevel debug
 
+~~~
+
+~~~
+ffmpeg -rtsp_transport tcp -timeout 5000000 -i "rtsp://admin:qwer@1234@192.168.1.108:554/cam/realmonitor?channel=1&subtype=0" -vcodec libx264 -acodec copy -f flv rtmp://192.168.56.104:1935/mylive/1 -loglevel debug
 ~~~
 
 
