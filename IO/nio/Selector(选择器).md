@@ -1,4 +1,4 @@
-![](../../images/io/RelationShip_Selector.png)
+![](../../images/io/relationship_selection_class.png)
 
 # SelectionKey
 

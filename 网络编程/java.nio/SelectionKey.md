@@ -28,5 +28,11 @@ public int translateInterestOps(int ops) {
 }
 ~~~
 
+设置多个感兴趣的事件：
+
+~~~
+selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+~~~
+
 
 
