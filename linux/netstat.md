@@ -90,6 +90,18 @@ unix  2      [ ]         STREAM     CONNECTED     214739   42609/java
 tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      1743/puma 4.3.5.git
 ~~~
 
+## 2.5. 列出time_wait的tcp连接
+
+~~~
+netstat -ant|grep -i time_wait
+~~~
+
+统计处于time_wait状态的连接数
+
+~~~
+netstat -ant|grep -i time_wait |wc -l
+~~~
+
 
 
  
