@@ -30,25 +30,7 @@ ln -s /usr/local/nginx/sbin/nginx /usr/bin/nginx
 
 ~~~
 
-步骤：
 
-~~~
-yum install gcc-c++
-
-~~~
-
-
-
-# 下载rtmp模块
-
-~~~
-git clone https://github.com/arut/nginx-rtmp-module.git
-
-cd /opt/nginx/（源码路径）
-./configure --prefix=/usr/local/nginx --conf-path=/usr/local/nginx/nginx.conf --add-module=/opt/nginx-rtmp-module
-~~~
-
-https://cloud.tencent.com/developer/article/1525055
 
 
 

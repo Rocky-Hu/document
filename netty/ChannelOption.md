@@ -1,104 +1,65 @@
 # 一、ChannelOption.AUTO_READ
 
-NioServerSocketChannel通过Selector获取到连接就绪的连接，包装成NioSocketChannel。包装完成，io.netty.bootstrap.ServerBootstrap.ServerBootstrapAcceptor的io.netty.bootstrap.ServerBootstrap.ServerBootstrapAcceptor#channelRead方法会被执行，获取到的NioSocketChannel会被注册到子EventLoopGroup中：
+控制逻辑如下：
 
 ~~~
+io.netty.channel.DefaultChannelPipeline.HeadContext#channelActive
 @Override
-@SuppressWarnings("unchecked")
-public void channelRead(ChannelHandlerContext ctx, Object msg) {
-    final Channel child = (Channel) msg;
-
-    child.pipeline().addLast(childHandler);
-
-    setChannelOptions(child, childOptions, logger);
-    setAttributes(child, childAttrs);
-
-    try {
-        childGroup.register(child).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                if (!future.isSuccess()) {
-                    forceClose(child, future.cause());
-                }
-            }
-        });
-    } catch (Throwable t) {
-        forceClose(child, t);
-    }
-}
-~~~
-
-内部执行io.netty.channel.AbstractChannel.AbstractUnsafe#register0此方法，这里会执行下面的代码
-
-~~~
-pipeline.fireChannelActive();
-~~~
-
-这个pipeline是NioSocketChannel的pipeline。接着调用io.netty.channel.DefaultChannelPipeline#fireChannelActive方法：
-
-~~~
-@Override
-public final ChannelPipeline fireChannelActive() {
-    AbstractChannelHandlerContext.invokeChannelActive(head);
-    return this;
-}
-~~~
-
-io.netty.channel.AbstractChannelHandlerContext#invokeChannelActive(io.netty.channel.AbstractChannelHandlerContext)：
-
-~~~
-static void invokeChannelActive(final AbstractChannelHandlerContext next) {
-    EventExecutor executor = next.executor();
-    if (executor.inEventLoop()) {
-        next.invokeChannelActive();
-    } else {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                next.invokeChannelActive();
-            }
-        });
-    }
-}
-~~~
-
-这里的next是HeadContext，也就是Pipeline中的第一个ChannelHandler，
-
-io.netty.channel.AbstractChannelHandlerContext#invokeChannelActive()：
-
-~~~
-private void invokeChannelActive() {
-    if (invokeHandler()) {
-        try {
-            ((ChannelInboundHandler) handler()).channelActive(this);
-        } catch (Throwable t) {
-            invokeExceptionCaught(t);
-        }
-    } else {
-        fireChannelActive();
-    }
-}
-~~~
-
-io.netty.channel.DefaultChannelPipeline.HeadContext#channelActive：
-
-~~~
 public void channelActive(ChannelHandlerContext ctx) {
     ctx.fireChannelActive();
 
     readIfIsAutoRead();
 }
+io.netty.channel.nio.AbstractNioChannel#doBeginRead
+@Override
+protected void doBeginRead() throws Exception {
+    // Channel.read() or ChannelHandlerContext.read() was called
+    final SelectionKey selectionKey = this.selectionKey;
+    if (!selectionKey.isValid()) {
+        return;
+    }
+
+    readPending = true;
+
+    final int interestOps = selectionKey.interestOps();
+    if ((interestOps & readInterestOp) == 0) {
+        selectionKey.interestOps(interestOps | readInterestOp);
+    }
+}
 ~~~
 
-现在就碰到了跟ChannelOption.AUTO_READ相关联的方法readIfIsAutoRead():
+其实就是是否设置感兴趣事件。
+
+AUTO_READ为true，那么Netty在创建Channel之后，自动帮我们设置感兴趣事件，那么对于NioServerSocketChannel在有新的TCP连接就绪的时候就会得到通知，对于NioSocketChannel，当它的连接缓冲区中可读或可写的时候得到通知。
+
+那么如果我们将AUTO_READ设置为false，一般是对NioSocketChannel设置为false，也就是：
 
 ~~~
+.childOption(ChannelOption.AUTO_READ, false)
+~~~
+
+这样设置。那么当数据可读的时候，那channel是得不到通知的，我们可以手动调用：
+
+~~~
+io.netty.channel.Channel#read
+~~~
+
+read方法，来开启读操作，这个就是和自动开启一样的执行逻辑了，自动开启中有这样的一段代码：
+
+~~~
+io.netty.channel.DefaultChannelPipeline.HeadContext#readIfIsAutoRead
 private void readIfIsAutoRead() {
     if (channel.config().isAutoRead()) {
         channel.read();
     }
 }
 ~~~
+
+也是调用的channel的read方法。
+
+总结：也就是自动和手动设置感兴趣的事件的区别。
+
+
 
 
 

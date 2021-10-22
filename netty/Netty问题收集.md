@@ -35,3 +35,5 @@ https://stackoverflow.com/questions/8568708/can-a-single-netty-bootstrap-connect
 
 Yes you can reuse the client bootstrap without a problem. If you specify a ChannelPipelineFactory each new channel will get its own ChannelPipeline. If you want to have different settings for different clients you may just create one client bootstrap per connection. This works out very well as the bootstrap is really light-weight.
 
+# 三、远程主机强迫关闭了一个现有的连接
+
