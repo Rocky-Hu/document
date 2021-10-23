@@ -199,27 +199,24 @@ address sizes   : 46 bits physical, 48 bits virtual
 power management:
 ~~~
 
-## 物理CPU个数
-
 ~~~
-cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l
-~~~
-
-逻辑CPU的个数
-
-~~~
-cat /proc/cpuinfo | grep "processor" | wc -l
-~~~
-
-## 每个物理CPU中Core的个数
-
-~~~
-cat /proc/cpuinfo | grep "cpu cores" | wc -l
+#查看物理CPU个数
+cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l
+# 查看每个物理CPU中core的个数(即核数)
+cat /proc/cpuinfo| grep "cpu cores"| uniq
+#查看逻辑CPU的个数
+cat /proc/cpuinfo| grep "processor"| wc -l
+#查看CPU信息（型号）
+cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c
 ~~~
 
-## 查看每个物理 cpu 中 核心数(core 数)
 
-~~~
-cat /proc/cpuinfo | grep "cpu cores" | uniq
-~~~
+
+
+
+
+
+
+
+
 
