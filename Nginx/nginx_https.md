@@ -3,6 +3,10 @@
 ~~~
 [root@localhost sbin]# openssl version
 OpenSSL 1.0.2k-fips  26 Jan 2017
+
+The OPENSSLDIR line is especially interesting, as it will tell you where OpenSSL will look for its configurations and certificates. You can print out that specific line by using the following command:
+[root@localhost certs]# openssl version -d
+OPENSSLDIR: "/etc/pki/tls"
 ~~~
 
 ## 安装（更新）
