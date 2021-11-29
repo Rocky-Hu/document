@@ -27,5 +27,30 @@ where <option> is one of:
 
 ~~~
 
+# 使用
 
+## 查看Eden区和Survivor比例
+
+~~~
+C:\Users\87490\Desktop> jinfo -flag SurvivorRatio 17924
+-XX:SurvivorRatio=8
+~~~
+
+默认的，Edem : from : to = 8 :1:1。即： Eden = 8/10 的新生代空间大小，from = to = 1/10 的新生代空间大小。
+
+## 查看新生代和老年代比例
+
+~~~
+C:\Users\87490\Desktop> jinfo -flag NewRatio 17924
+-XX:NewRatio=2
+~~~
+
+**默认的，新生代 ( Young ) 与老年代 ( Old ) 的比例的值为 1:2 ( 该值可以通过参数 –XX:NewRatio 来指定 )**，即：新生代 ( Young ) = 1/3 的堆空间大小。老年代 ( Old ) = 2/3 的堆空间大小。
+
+## 查看ThreadStackSize
+
+~~~
+[root@localhost ~]# jinfo -flag ThreadStackSize 8310
+-XX:ThreadStackSize=1024
+~~~
 
