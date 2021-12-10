@@ -31,3 +31,39 @@ if (!explicitFactoryUsed) {
 }
 ~~~
 
+# 流程
+
+org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration#sqlSessionFactory
+
+->
+
+org.mybatis.spring.SqlSessionFactoryBean#getObject
+
+->
+
+org.mybatis.spring.SqlSessionFactoryBean#afterPropertiesSet
+
+->
+
+org.mybatis.spring.SqlSessionFactoryBean#buildSqlSessionFactory
+
+->
+
+org.apache.ibatis.builder.xml.XMLMapperBuilder#parse
+
+->
+
+org.apache.ibatis.builder.xml.XMLMapperBuilder#configurationElement
+
+->
+
+org.apache.ibatis.builder.xml.XMLMapperBuilder#buildStatementFromContext(java.util.List<org.apache.ibatis.parsing.XNode>)
+
+->
+
+org.apache.ibatis.builder.xml.XMLMapperBuilder#buildStatementFromContext(java.util.List<org.apache.ibatis.parsing.XNode>, java.lang.String)
+
+->
+
+org.apache.ibatis.builder.xml.XMLStatementBuilder#parseStatementNode
+
