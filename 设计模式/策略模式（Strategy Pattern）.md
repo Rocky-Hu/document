@@ -2,5 +2,6 @@ java.net.URL类是对统一资源定位符的抽象。它扩展了java.lang.Obje
 
 # HttpMessageConverter
 
-Strategy interface that specifies a converter that can convert from and to HTTP requests and responses.
+Strategy interface that specifies a converter that can convert from and to HTTP requests and responses。
 
+https://www.runoob.com/design-pattern/strategy-pattern.html
