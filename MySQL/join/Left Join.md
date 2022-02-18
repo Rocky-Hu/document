@@ -116,7 +116,7 @@ select * from tb_classes c left join tb_students s on s.class_id = c.id and c.na
 
 结果解析（先看第三节内容）：
 
-![](../images/left join_where和on.png)
+![](../../images/left join_where和on.png)
 
 # 三、 LEFT JOIN实现原理
 
