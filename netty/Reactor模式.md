@@ -1,1 +1,0 @@
-![](../images/netty/reactor.png)
