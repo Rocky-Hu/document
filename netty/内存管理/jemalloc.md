@@ -83,12 +83,15 @@ jemalloc 是由 Jason Evans 在 FreeBSD 项目中引入的新一代内存分配�
 - A bin may be associated with several runs
 - A run can only be associated with a specific bin
 - Bins have their runs organized in a tree
-
 - Each bin has an associated size class and stores / manages regions of this class
 - These regions are accessed through the bin’s run
 - Most recently used run of the bin: runcur
 - Tree of runs with free regions: runs
   - Used when runcur is full
+
+### 图-3
+
+![](../../images/netty/jemalloc_1.png)
 
 # 参考资料
 
