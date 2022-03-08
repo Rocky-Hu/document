@@ -18,11 +18,7 @@
 
 # 2. 同步与异步、阻塞与非阻塞的区别
 
-
-
 # 3. select、poll、epoll的机制及其区别
-
-
 
 # 4. Netty底层操作与Java NIO操作对应关系如何
 
@@ -42,6 +38,8 @@ https://www.cnblogs.com/rickiyang/p/12904552.html
 
 # 10. Netty如何支持单机百万连接
 
+https://zhuanlan.zhihu.com/p/324601157
+
 # 11. 说说Netty零拷贝的原理
 
 # 12. 说说Netty如何实现长连接心跳保活机制
@@ -56,4 +54,6 @@ https://www.cnblogs.com/rickiyang/p/12904552.html
 # 15. Netty高并发高性能体现在哪些方面
 
 # 16. 基于Netty如何设计微信钉钉后端高并发IM架构
+
+# 17. 心跳和空闲连接检测
 
