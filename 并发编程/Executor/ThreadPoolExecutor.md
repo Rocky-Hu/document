@@ -128,3 +128,25 @@ private static int ctlOf(int rs, int wc) {
 ~~~
 按位"或"，两个位只要有一个为1，那么结果就是1，否则就为0。
 
+# 二、方法
+
+## 2.1. boolean awaitTermination_(_long timeout, TimeUnit unit_)_
+
+ ### 作用
+
+这个方法的作用是，调用后等待`timeout`时间后，反馈线程池的状态。
+
+## 返回值说明
+
+- true
+
+  等待期间（包括进入等待状态之前）线程池已关闭并且所有已提交的任务（包括正在执行的和队列中等待的）都执行完毕，相当于线程池已经“终结”了，方法便会返回 `true`
+
+- false
+
+  等待超时时间到后，第一种线程池“终结”的情况始终未发生，方法返回 `false`
+
+- 抛出InterruptedException
+
+  等待期间线程被中断，方法会抛出 InterruptedException 异常
+
