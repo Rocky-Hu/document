@@ -1,4 +1,4 @@
-![](../images/netty/ChannelPipeline.png)
+![](../../images/netty/ChannelPipeline.png)
 
 # 一、ChannelInboundHandler
 
