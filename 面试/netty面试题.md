@@ -2,19 +2,19 @@
 
 ## BIO
 
-![](../images/io/BIO图示.png)
+![](/Users/rocky/Work/project/document/images/io/BIO图示.png)
 
 ## NIO
 
-![](../images/io/NIO图示.png)
+![](/Users/rocky/Work/project/document/images/io/NIO图示.png)
 
 ## AIO
 
-![](../images/io/AIO图示.png)
+![](/Users/rocky/Work/project/document/images/io/AIO图示.png)
 
 ## BIO、NIO和AIO对比
 
-![](../images/io/BIO_NIO_AIO对比.png)
+![](/Users/rocky/Work/project/document/images/io/BIO_NIO_AIO对比.png)
 
 # 2. 同步与异步、阻塞与非阻塞的区别
 
